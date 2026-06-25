@@ -4,7 +4,7 @@ import SidebarContent from "./SidebarContent";
 
 const Sidebar = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 z-[100] text-white">
+    <div className=" inset-0 z-100 text-white fixed">
       {/* Dark overlay */}
       <div
         className="absolute inset-0 cursor-default bg-black/60"
@@ -12,7 +12,7 @@ const Sidebar = ({ onClose }) => {
       />
 
       {/* Sidebar panel */}
-      <div className="relative flex h-full w-[240px] flex-col bg-[#0f0f0f]">
+      <div className="relative flex h-full w-60 flex-col bg-[#0f0f0f]">
         <div className="flex h-14 shrink-0 items-center px-4">
           <button
             onClick={onClose}

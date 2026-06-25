@@ -7,7 +7,7 @@ const UserProfile = () => {
   const { user } = useUser();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+   const [menuOpen, setMenuOpen] = useState(false);
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {

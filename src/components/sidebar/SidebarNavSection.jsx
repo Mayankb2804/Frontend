@@ -9,11 +9,6 @@ const SidebarNavSection = ({ linkStyle }) => {
         Home
       </NavLink>
 
-      <NavLink to="/about" className={({ isActive }) => `${linkStyle} ${isActive ? "bg-[#272727] font-medium" : ""}`}>
-        <Clapperboard size={22} />
-        Shorts
-      </NavLink>
-
       <NavLink to="/subscriptions" className={({ isActive }) => `${linkStyle} ${isActive ? "bg-[#272727] font-medium" : ""}`}>
         <PlaySquare size={22} />
         Subscriptions

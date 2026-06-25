@@ -16,11 +16,6 @@ const SidebarYouSection = ({ linkStyle }) => {
         Playlists
       </NavLink>
 
-      <NavLink to="/watch-later" className={linkStyle}>
-        <Clock3 size={22} />
-        Watch later
-      </NavLink>
-
       <NavLink to="/liked" className={linkStyle}>
         <ThumbsUp size={22} />
         Liked videos

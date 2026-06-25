@@ -7,7 +7,7 @@ const YoutubeLogo = () => {
         </div>
         <div className="hidden text-xl font-bold tracking-[-1.2px] text-white sm:block">YouTube</div>
       </a>
-      <div className="hidden self-start pt-2 text-[10px] text-[#aaa] sm:block">IN</div>
+      <div className="hidden text-[10px] text-[#aaa] sm:block" style={{ position: 'relative', top: '-6px' }}>IN</div>
     </div>
   );
 };

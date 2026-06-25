@@ -1,17 +1,16 @@
 import { createContext, useContext, useState } from "react";
 
 const UserContext = createContext();
-
 export const UserProvider = ({ children }) => {
   const savedUser = localStorage.getItem("user");
   const [user, setUser] = useState(savedUser ? JSON.parse(savedUser) : null);
-
+  const [menuOpen, setMenuOpen] = useState(false)
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, menuOpen, setMenuOpen }}>
       {children}
     </UserContext.Provider>
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
+
 export const useUser = () => useContext(UserContext);
