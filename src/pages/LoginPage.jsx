@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { loginUser } from "../services/user.api";
 import LoginHeader from "../components/login/LoginHeader";
@@ -45,6 +45,12 @@ const LoginPage = () => {
           onPasswordChange={(e) => setPassword(e.target.value)}
           onSubmit={handleLogin}
         />
+        <p className="mt-4 text-center text-sm text-[#aaa]">
+          New to YouTube?{" "}
+          <Link to="/signup" className="text-[#3ea6ff] hover:underline">
+            Create account
+          </Link>
+        </p>
       </div>
     </div>
   );
