@@ -1,12 +1,13 @@
-import { useState } from "react";
-import { Menu } from "lucide-react";
-import YoutubeLogo from "./YoutubeLogo";
-import Sidebar from "../sidebar/Sidebar";
-import { useUser } from "../../context/UserContext";
+import { useState } from "react"
+import { Menu } from "lucide-react"
+import YoutubeLogo from "./YoutubeLogo"
+import Sidebar from "../sidebar/Sidebar"
+import { useUser } from "../../context/UserContext"
+
 const MenuBtn = () => {
-  const {menuOpen, setMenuOpen} = useUser();
+  const { menuOpen, setMenuOpen } = useUser()
+
   return (
-    <div>
     <div className="flex h-full shrink-0 items-center">
       <div className="flex h-full items-center">
         <button
@@ -18,10 +19,9 @@ const MenuBtn = () => {
         </button>
         <YoutubeLogo />
       </div>
-      {menuOpen && <Sidebar onClose={() => setMenuOpen(false)} />}  
+      {menuOpen && <Sidebar onClose={() => setMenuOpen(false)} />}
     </div>
-    </div>
-  );
-};
+  )
+}
 
-export default MenuBtn;
+export default MenuBtn

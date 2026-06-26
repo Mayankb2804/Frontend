@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search } from "lucide-react"
 
 const SearchBar = () => {
   return (
@@ -9,14 +9,14 @@ const SearchBar = () => {
           placeholder="Search"
         />
         <button
-          className="flex h-full w-14 shrink-0 cursor-pointer items-center justify-center border border-l-0 border-[#303030] bg-[#222] transition-colors hover:bg-[#303030] sm:w-16"
+          className="flex h-full w-14 shrink-0 items-center justify-center border border-l-0 border-[#303030] bg-[#222] hover:bg-[#303030] sm:w-16"
           aria-label="Search"
         >
           <Search size={20} />
         </button>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SearchBar;
+export default SearchBar

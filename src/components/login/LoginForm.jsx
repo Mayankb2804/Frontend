@@ -1,13 +1,13 @@
-const LoginForm = ({ username, password, loading, onUsernameChange, onPasswordChange, onSubmit }) => {
+const LoginForm = ({ email, password, loading, onEmailChange, onPasswordChange, onSubmit }) => {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label className="text-sm text-[#aaa]">Username</label>
+        <label className="text-sm text-[#aaa]">Email</label>
         <input
-          type="text"
-          value={username}
-          onChange={onUsernameChange}
-          placeholder="Enter your username"
+          type="email"
+          value={email}
+          onChange={onEmailChange}
+          placeholder="Enter your email"
           required
           className="rounded-lg border border-[#3f3f3f] bg-[#121212] px-4 py-3 text-sm text-white outline-none placeholder:text-[#555] focus:border-[#1c62b9]"
         />
@@ -33,7 +33,7 @@ const LoginForm = ({ username, password, loading, onUsernameChange, onPasswordCh
         {loading ? "Signing in..." : "Sign in"}
       </button>
     </form>
-  );
-};
+  )
+}
 
-export default LoginForm;
+export default LoginForm

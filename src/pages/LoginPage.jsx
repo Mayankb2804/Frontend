@@ -1,36 +1,36 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useUser } from "../context/UserContext";
-import { loginUser } from "../services/user.api";
-import LoginHeader from "../components/login/LoginHeader";
-import LoginError from "../components/login/LoginError";
-import LoginForm from "../components/login/LoginForm";
+import { useState } from "react"
+import { useNavigate, Link } from "react-router-dom"
+import { useUser } from "../context/UserContext"
+import { loginUser } from "../services/user.api"
+import LoginHeader from "../components/login/LoginHeader"
+import LoginError from "../components/login/LoginError"
+import LoginForm from "../components/login/LoginForm"
 
 const LoginPage = () => {
-  const { setUser } = useUser();
-  const navigate = useNavigate();
+  const { setUser } = useUser()
+  const navigate = useNavigate()
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    e.preventDefault()
+    setError("")
+    setLoading(true)
 
     try {
-      const user = await loginUser(username, password);
-      setUser(user);
-      localStorage.setItem("user", JSON.stringify(user));
-      navigate("/");
+      const user = await loginUser(email, password)
+      setUser(user)
+      localStorage.setItem("user", JSON.stringify(user))
+      navigate("/")
     } catch (err) {
-      setError(err?.response?.data?.message || "Invalid username or password");
+      setError(err?.response?.data?.message || "Invalid email or password")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0f0f0f] px-4">
@@ -38,10 +38,10 @@ const LoginPage = () => {
         <LoginHeader />
         <LoginError message={error} />
         <LoginForm
-          username={username}
+          email={email}
           password={password}
           loading={loading}
-          onUsernameChange={(e) => setUsername(e.target.value)}
+          onEmailChange={(e) => setEmail(e.target.value)}
           onPasswordChange={(e) => setPassword(e.target.value)}
           onSubmit={handleLogin}
         />
@@ -53,7 +53,7 @@ const LoginPage = () => {
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoginPage;
+export default LoginPage

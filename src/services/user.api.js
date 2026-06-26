@@ -1,7 +1,7 @@
 import { api } from "./axiosInstance.js"
 
-export async function loginUser(username, password) {
-  const response = await api.post("/users/login", { username, password })
+export async function loginUser(email, password) {
+  const response = await api.post("/users/login", { email, password })
   return response.data.data.user
 }
 
