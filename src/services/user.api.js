@@ -25,5 +25,5 @@ export async function signUp({ email, password, username, fullname, avatar, cove
     formData.append("coverImage", coverImage)
   }
   const response = await api.post("/users/register", formData)
-  return response.data
+  return response.data.data.user
 }

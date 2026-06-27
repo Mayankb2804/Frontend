@@ -1,12 +1,14 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { signUp } from "../services/user.api"
+import { useUser } from "../context/UserContext"
 import SignUpHeader from "../components/signup/SignUpHeader"
 import SignUpError from "../components/signup/SignUpError"
 import SignUpForm from "../components/signup/SignUpForm"
 
 function SignUpPage() {
   const navigate = useNavigate()
+  const { setUser } = useUser()
 
   const [fullname, setFullname] = useState("")
   const [username, setUsername] = useState("")
@@ -23,17 +25,15 @@ function SignUpPage() {
     setLoading(true)
 
     try {
-      await signUp({ fullname, username, email, password, avatar, coverImage })
-      navigate("/signin")
+      const user = await signUp({ fullname, username, email, password, avatar, coverImage })
+      setUser(user)
+      localStorage.setItem("user", JSON.stringify(user))
+      navigate("/")
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message)
-      } else {
-        setError("Something went wrong. Please try again.")
-      }
+      setError(err?.response?.data?.message || "Something went wrong. Please try again.")
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (
