@@ -1,12 +1,81 @@
-import { useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { updateAvatar, updateCoverImage, currentUser } from "../../services/user.api"
 
 const EditProfilePage = () => {
   const navigate = useNavigate()
-  const [fullname, setFullname] = useState("Mayank Bansal")
-  const [username, setUsername] = useState("mbdon12")
-  const [email, setEmail] = useState("mayank@example.com")
+  const [user, setUser] = useState(null)
+  const [fullname, setFullname] = useState("")
+  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
   const [bio, setBio] = useState("")
+
+  const [avatarPreview, setAvatarPreview] = useState(null)
+  const [coverPreview, setCoverPreview] = useState(null)
+  const [avatarLoading, setAvatarLoading] = useState(false)
+  const [coverLoading, setCoverLoading] = useState(false)
+
+  const avatarInputRef = useRef(null)
+  const coverInputRef = useRef(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await currentUser()
+        setUser(userData)
+        setFullname(userData.fullname || "")
+        setUsername(userData.username || "")
+        setEmail(userData.email || "")
+        setBio(userData.bio || "")
+        setAvatarPreview(userData.avatar || null)
+        setCoverPreview(userData.coverImage || null)
+      } catch (error) {
+        console.error("Failed to fetch user:", error)
+      }
+    }
+    fetchUser()
+  }, [])
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    // Show local preview immediately
+    setAvatarPreview(URL.createObjectURL(file))
+    setAvatarLoading(true)
+    try {
+      const updatedUser = await updateAvatar(file)
+      setAvatarPreview(updatedUser.avatar)
+    } catch (error) {
+      console.error("Avatar update failed:", error)
+      // Revert preview on failure
+      setAvatarPreview(user?.avatar || null)
+    } finally {
+      setAvatarLoading(false)
+    }
+  }
+
+  const handleCoverChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    // Show local preview immediately
+    setCoverPreview(URL.createObjectURL(file))
+    setCoverLoading(true)
+    try {
+      const updatedUser = await updateCoverImage(file)
+      setCoverPreview(updatedUser.coverImage)
+    } catch (error) {
+      console.error("Cover image update failed:", error)
+      // Revert preview on failure
+      setCoverPreview(user?.coverImage || null)
+    } finally {
+      setCoverLoading(false)
+    }
+  }
+
+  const getInitials = (name) => {
+    if (!name) return "?"
+    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+  }
 
   return (
     <div className="bg-[#0f0f0f] min-h-screen text-white pb-12">
@@ -27,29 +96,65 @@ const EditProfilePage = () => {
         {/* Avatar + Cover card */}
         <div className="bg-[#1a1a1a] border border-[#333] rounded-xl overflow-hidden mb-6">
 
-          {/* Cover */}
-          <div className="w-full h-24 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] relative group cursor-pointer">
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-sm text-white">Change cover</span>
+          {/* Cover image */}
+          <div
+            className="w-full h-24 relative group cursor-pointer"
+            style={{
+              background: coverPreview
+                ? `url(${coverPreview}) center/cover no-repeat`
+                : "linear-gradient(to bottom right, #1a1a2e, #16213e, #0f3460)",
+            }}
+            onClick={() => coverInputRef.current.click()}
+          >
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {coverLoading
+                ? <span className="text-sm text-white">Uploading...</span>
+                : <span className="text-sm text-white">Change cover</span>
+              }
             </div>
+            <input
+              type="file"
+              accept="image/*"
+              ref={coverInputRef}
+              onChange={handleCoverChange}
+              className="hidden"
+            />
           </div>
 
           {/* Avatar row */}
           <div className="flex items-center gap-4 px-5 py-4">
-            <div className="relative cursor-pointer group">
-              <div className="w-16 h-16 rounded-full bg-[#e24b4a] border-[3px] border-[#0f0f0f] flex items-center justify-center text-xl font-medium">
-                MB
+            <div
+              className="relative cursor-pointer group"
+              onClick={() => avatarInputRef.current.click()}
+            >
+              <div className="w-16 h-16 rounded-full bg-[#e24b4a] border-[3px] border-[#0f0f0f] flex items-center justify-center text-xl font-medium overflow-hidden">
+                {avatarPreview
+                  ? <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                  : <span>{getInitials(fullname)}</span>
+                }
               </div>
-              <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                📷
+              <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-sm">
+                {avatarLoading ? "⏳" : "📷"}
               </div>
             </div>
+
             <div>
-              <p className="text-sm font-medium mb-0.5">Mayank Bansal</p>
-              <p className="text-xs text-[#aaa]">@mbdon12</p>
+              <p className="text-sm font-medium mb-0.5">{fullname || "—"}</p>
+              <p className="text-xs text-[#aaa]">@{username || "—"}</p>
             </div>
-            <button className="ml-auto bg-transparent border border-[#555] text-white text-xs px-4 py-1.5 rounded-full cursor-pointer">
-              Change photo
+
+            <input
+              type="file"
+              accept="image/*"
+              ref={avatarInputRef}
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
+            <button
+              onClick={() => avatarInputRef.current.click()}
+              className="ml-auto bg-transparent border border-[#555] text-white text-xs px-4 py-1.5 rounded-full cursor-pointer"
+            >
+              {avatarLoading ? "Uploading..." : "Change photo"}
             </button>
           </div>
         </div>

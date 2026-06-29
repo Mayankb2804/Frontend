@@ -1,10 +1,33 @@
 import { useUser } from "../context/UserContext"
 import { useNavigate } from "react-router-dom"
-
+import { getChannelStats, getUserProfile } from "../services/user.api";
+import { currentUser } from "../services/user.api";
+import { useEffect, useState } from "react";
 const ProfilePage = () => {
   const { menuOpen } = useUser();
   const navigate = useNavigate()
+  const [user, setUser] = useState(null);
+  const [stats, setStats] = useState({
+    totalVideos: 0,
+    totalViews: 0,
+    totalSubscribers: 0,
+    totalLikes: 0,
+  });
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userData = await currentUser();
+        const statsData = await getChannelStats();
+        setUser(userData);
+        setStats(statsData);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchData();
+  },[])
+    
   return (
     <div className={`transition-all h-screen duration-300 ${menuOpen ? "ml-60" : "ml-0"}`}>
 
@@ -16,7 +39,13 @@ const ProfilePage = () => {
         {/* Avatar inside cover, bottom left */}
         <div className="absolute -bottom-10 left-[calc(50%-410px-1rem)]">
           <div className="w-20 h-20 rounded-full bg-[#e24b4a] border-[3px] border-[#0f0f0f] flex items-center justify-center text-2xl font-medium text-white">
-            MB
+      
+      <img
+        src={user?.avatar}
+        alt={user?.username}
+        className="w-full h-full object-cover rounded-full"
+      />
+    
           </div>
         </div>
       </div>
@@ -25,8 +54,8 @@ const ProfilePage = () => {
       <div className="max-w-4xl mx-auto px-8 mt-12">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-medium text-white mb-0.5">Mayank Bansal</h1>
-            <p className="text-sm text-[#aaa]">@mbdon12 · 0 subscribers · 0 videos</p>
+            <h1 className="text-xl font-medium text-white mb-0.5">{user?.fullname}</h1>
+            <p className="text-sm text-[#aaa]">@{user?.username} · {stats.totalSubscribers} subscribers · {stats?.totalVideos} videos</p>
           </div>
           <div className="flex gap-2">
             <button onClick={() => navigate("/profile/edit")
@@ -45,7 +74,7 @@ const ProfilePage = () => {
 
         {/* Tabs */}
         <div className="flex border-b border-[#333] mb-6">
-          <button className="bg-transparent border-none text-white text-sm px-5 py-2.5 border-b-2 border-white font-medium">
+          <button  className="bg-transparent border-none text-white text-sm px-5 py-2.5 border-b-2 border-white font-medium">
             Videos
           </button>
           <button className="bg-transparent border-none text-[#aaa] text-sm px-5 py-2.5 border-b-2 border-transparent">
@@ -59,15 +88,15 @@ const ProfilePage = () => {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 text-center">
-            <p className="text-2xl font-medium text-white mb-0">0</p>
+            <p className="text-2xl font-medium text-white mb-0">{stats.totalVideos}</p>
             <p className="text-xs text-[#aaa] mt-1">Videos</p>
           </div>
           <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 text-center">
-            <p className="text-2xl font-medium text-white mb-0">0</p>
+            <p className="text-2xl font-medium text-white mb-0">{stats.totalSubscribers}</p>
             <p className="text-xs text-[#aaa] mt-1">Subscribers</p>
           </div>
           <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 text-center">
-            <p className="text-2xl font-medium text-white mb-0">0</p>
+            <p className="text-2xl font-medium text-white mb-0">{stats.totalViews}</p>
             <p className="text-xs text-[#aaa] mt-1">Total views</p>
           </div>
         </div>

@@ -46,3 +46,14 @@ export async function updateCoverImage(coverImage) {
   const response = await api.patch("/users/cover-image", formData)
   return response.data.data.user
 }
+
+export async function getUserProfile({username}){
+  const response = await api.get(`/users/c/${username}`);
+  return response.data
+}
+
+export async function getChannelStats() {
+  const response = await api.get("/dashboard/stats");
+  return response.data.data;
+}
+

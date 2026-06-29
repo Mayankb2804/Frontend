@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { UserRound } from "lucide-react"
 import { useUser } from "../../context/UserContext"
 import LogoutButton from "./LogoutButton"
-
+import { NavLink } from "react-router-dom"
 const UserProfile = () => {
   const { user } = useUser()
   const [open, setOpen] = useState(false)
@@ -34,7 +34,7 @@ const UserProfile = () => {
 
       {open && (
         <div className="absolute right-0 top-10 z-50 w-56 rounded-xl border border-[#3f3f3f] bg-[#212121] py-2 shadow-xl">
-          <div className="flex items-center gap-3 border-b border-[#3f3f3f] px-4 py-3">
+          <NavLink to='/profile' className="flex items-center gap-3 border-b border-[#3f3f3f] px-4 py-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#3f3f3f]">
               {user && user.avatar ? (
                 <img src={user.avatar} alt="Profile" className="h-full w-full object-cover" />
@@ -48,7 +48,7 @@ const UserProfile = () => {
               </p>
               <p className="truncate text-xs text-[#aaa]">@{user.username}</p>
             </div>
-          </div>
+          </NavLink>
           <div className="px-1 pt-1">
             <LogoutButton />
           </div>

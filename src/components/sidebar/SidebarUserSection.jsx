@@ -1,9 +1,10 @@
 import { UserRound } from "lucide-react";
 import SignIn from "../user/SignIn";
+import { NavLink } from "react-router-dom";
 
 const SidebarUserSection = ({ user }) => {
   return (
-    <div className="border-b border-[#3f3f3f]">
+    <NavLink to="/profile" className="border-b border-[#3f3f3f]">
       {user ? (
         <div className="flex items-center gap-3 px-3 py-4">
           {user.avatar ? (
@@ -27,7 +28,7 @@ const SidebarUserSection = ({ user }) => {
           <SignIn />
         </div>
       )}
-    </div>
+    </NavLink >
   );
 };
 
