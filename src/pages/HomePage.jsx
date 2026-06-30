@@ -13,7 +13,7 @@ const HomePage = () => {
     useEffect(() => {
     async function fetchVideos() {
         const data = await getAllVideos()
-        console.log(data)
+        console.log(videos)
         setVideos(data)
     }
     fetchVideos()
@@ -25,7 +25,7 @@ const HomePage = () => {
         <FilterChips chips={CHIPS} active={activeChip} onSelect={setActiveChip} />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
           {videos.map((v) => (
-            <VideoCard key={v.id} {...v} />
+            <VideoCard key={v._id} video_id={v._id} {...v} />
           ))}
         </div>
       </div>

@@ -58,7 +58,7 @@ export async function updateCoverImage(coverImage) {
 
 export async function getUserProfile({username}){
   const response = await api.get(`/users/c/${username}`);
-  return response.data
+  return response.data.data
 }
 
 export async function getChannelStats() {
@@ -89,15 +89,76 @@ export async function getAllVideos() {
   return response.data.data
 }
 
-export async function getLikedVideos() {
-  const response = await api.get("/likes/videos")
+export async function getVideoById(videoId) {
+  const response = await api.get(`/videos/${videoId}`)
   return response.data.data
 }
+
 
 //playlists
 
 export async function getUserPlaylists() {
   const user = await currentUser();
   const response = await api.get(`/playlist/user/${user._id}`)
+  return response.data.data
+}
+
+export async function createPlaylist({ name, description }) {
+  const response = await api.post("/playlist/", { name, description })
+  return response.data.data
+}
+
+export async function getPlaylistById(playlistId) {
+  const response = await api.get(`/playlist/${playlistId}`)
+  return response.data.data
+}
+
+export async function addVideoToPlaylist({videoId, playlistId}){
+  const response = await api.post(`/playlists/add/${videoId}/${playlistId}`)
+  return response.data.data
+}
+
+//comments
+
+export async function getCommentsByVideoId({videoId}) {
+    const response = await api.get(`/comments/${videoId}`)
+    return response.data.data
+}
+
+export async function addComment({videoId, content}) {
+    const response = await api.post(`/comments/${videoId}`,{content})
+    return response.data.data
+}
+
+export async function toggleCommentLike(commentId) {
+  const response = await api.post(`/likes/toggle/c/${commentId}`)
+  return response.data.data
+}
+//subs
+
+export async function getUserChannelSubscribers({channelId}) {
+  const response = await api.get(`/subscriptions/c/${channelId}`)
+  return response.data.data
+}
+
+export async function toggleSubscribe({channelId}) {
+  const response = await api.post(`/subscriptions/c/${channelId}`)
+  return response.data.data
+}
+
+//likes
+
+export async function getAllLikedVideosCount({videoId}) {
+  const response = await api.get(`/likes/v/${videoId}`)
+  return response.data.data
+}
+
+export async function getLikedVideos() {
+  const response = await api.get("/likes/videos")
+  return response.data.data
+}
+
+export async function toggleVideoLike(videoId) {
+  const response = await api.post(`/likes/toggle/v/${videoId}`)
   return response.data.data
 }

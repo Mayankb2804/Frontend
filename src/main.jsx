@@ -9,6 +9,7 @@ import SignUpPage from "./pages/SignUpPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import HistoryPage from "./pages/HistoryPage";
 import PlaylistsPage from "./pages/PlaylistsPage";
+import PlaylistVideoPage from "./pages/PlaylistVideoPage";
 import SettingsPage from "./pages/SettingsPage";
 import LikedPage from "./pages/LikedPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -22,10 +23,11 @@ const router = createBrowserRouter(
     <>
       <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
-        <Route path="/watch" element={<WatchPage />} />
+        <Route path="/watch/:videoId" element={<WatchPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/subscriptions" element={<SubscriptionPage />} />
         <Route path="/playlists" element={<PlaylistsPage />} />
+        <Route path="/playlists/:playlistId" element={<PlaylistVideoPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/liked" element={<LikedPage />} />

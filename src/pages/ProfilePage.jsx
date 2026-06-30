@@ -1,5 +1,5 @@
 import { useUser } from "../context/UserContext"
-import { useNavigate } from "react-router-dom"
+import { NavLink, useNavigate } from "react-router-dom"
 import { getChannelStats, getAllVideos, currentUser, getUserPlaylists } from "../services/user.api"
 import { useEffect, useState } from "react";
 const ProfilePage = () => {
@@ -155,7 +155,7 @@ const ProfilePage = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {playlists.map((p) => (
-                <div key={p._id} className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-[#333] cursor-pointer hover:border-[#555]">
+                <NavLink to={`/playlists/${p._id}` }key={p._id} className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-[#333] cursor-pointer hover:border-[#555]">
                   <div className="w-full aspect-video bg-[#272727] flex items-center justify-center">
                     <span className="text-4xl">🎵</span>
                   </div>
@@ -163,7 +163,7 @@ const ProfilePage = () => {
                     <p className="text-white text-sm font-medium truncate">{p.name}</p>
                     <p className="text-[#aaa] text-xs mt-1">{p.videos?.length || 0} videos</p>
                   </div>
-                </div>
+                </NavLink >
               ))}
             </div>
           )

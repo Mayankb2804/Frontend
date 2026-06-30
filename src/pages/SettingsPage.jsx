@@ -44,7 +44,7 @@ const SettingsPage = () => {
     if (action === "delete") {
       if (confirm("Are you sure? This cannot be undone.")) {
         await deleteAccount()
-        navigate("/login")
+        navigate("/signin")
       }
     }
   }

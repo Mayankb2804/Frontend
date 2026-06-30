@@ -1,31 +1,112 @@
 import PageWrapper from "../components/shared/PageWrapper"
 import PageHeader from "../components/shared/PageHeader"
-
-const PLAYLISTS = Array.from({ length: 6 }, (_, i) => ({
-  id: i,
-  name: `Playlist Name ${i + 1}`,
-  count: Math.floor(Math.random() * 30) + 2,
-}))
+import { useEffect, useState } from "react"
+import { createPlaylist, getUserPlaylists } from "../services/user.api"
+import { useNavigate } from "react-router-dom"
 
 const PlaylistsPage = () => {
+  const navigate = useNavigate()
+  const [playlists, setPlaylists] = useState([])
+  const [createPlaylistState, setCreatePlaylistState] = useState(false)
+  const[name, setName] = useState("")
+  const[description, setDescription] = useState("")
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      try {
+        const userPlaylists = await getUserPlaylists();
+        setPlaylists(userPlaylists || []);
+      } catch (error) {
+        console.error(error)
+      }
+    } 
+    fetchPlaylists();
+  },[])
+
+  const createNewPlaylist = async () => {
+    try {
+      const response = await createPlaylist({name, description});
+      setPlaylists((prev) => [...prev, response])
+      setName("")
+      setDescription("")
+      setCreatePlaylistState(false)
+    } catch (error) {
+      console.error(error)
+    }
+  };
+  
   return (
     <PageWrapper>
       <div className="max-w-6xl mx-auto px-6 py-8">
         <PageHeader
           title="Playlists"
-          subtitle={`${PLAYLISTS.length} playlists`}
+          subtitle={`${playlists.length} playlists`}
           action={
-            <button className="flex items-center gap-2 bg-[#272727] hover:bg-[#3f3f3f] text-white text-sm px-4 py-2 rounded-full transition-colors border-none cursor-pointer">
+            <button onClick={()=>{
+              setCreatePlaylistState(true)
+            }} className="flex items-center gap-2 bg-[#272727] hover:bg-[#3f3f3f] text-white text-sm px-4 py-2 rounded-full transition-colors border-none cursor-pointer">
               <span className="text-lg leading-none">+</span>
               New playlist
             </button>
           }
         />
 
+        {createPlaylistState && (
+          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5 mb-6 flex flex-col gap-4">
+            <p className="text-white text-sm font-medium">Create new playlist</p>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[#aaa] text-xs">Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="My playlist"
+                autoFocus
+                className="bg-[#0f0f0f] border border-[#333] focus:border-[#3ea6ff] outline-none text-white text-sm rounded-lg px-3 py-2.5 transition-colors"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[#aaa] text-xs">Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Add an optional description"
+                rows={3}
+                className="bg-[#0f0f0f] border border-[#333] focus:border-[#3ea6ff] outline-none text-white text-sm rounded-lg px-3 py-2.5 resize-none transition-colors"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-1">
+              <button
+                onClick={() => {
+                  setCreatePlaylistState(false)
+                  setName("")
+                  setDescription("")
+                }}
+                className="text-[#aaa] hover:text-white text-sm px-4 py-2 rounded-full bg-transparent border-none cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={()=>{
+                  createNewPlaylist()
+                  navigate("/playlists")
+                }}
+                disabled={!name.trim()}
+                className="bg-[#3ea6ff] hover:bg-[#65b8ff] disabled:bg-[#2a2a2a] disabled:text-[#666] disabled:cursor-not-allowed text-[#0f0f0f] disabled:text-opacity-100 text-sm font-medium px-5 py-2 rounded-full border-none cursor-pointer transition-colors"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {PLAYLISTS.map((pl) => (
+          {playlists.map((pl) => (
             <div
-              key={pl.id}
+              key={pl._id}
+              onClick={() => navigate(`/playlists/${pl._id}`)}
               className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl overflow-hidden cursor-pointer hover:border-[#444] transition-colors group"
             >
               {/* Thumbnail */}
@@ -45,8 +126,10 @@ const PlaylistsPage = () => {
                 </p>
                 <p className="text-[#aaa] text-xs mb-3">View full playlist</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-[#555] text-xs">Updated 3 days ago</span>
-                  <button className="text-[#aaa] hover:text-white text-sm bg-transparent border-none cursor-pointer">⋮</button>
+                  <span className="text-[#555] text-xs">Last Updated at {pl.updatedAt.substring(0,10)}</span>
+                  <button onClick={() => {
+                    
+                  }} className="text-[#aaa] hover:text-white text-sm bg-transparent border-none cursor-pointer">⋮</button>
                 </div>
               </div>
             </div>

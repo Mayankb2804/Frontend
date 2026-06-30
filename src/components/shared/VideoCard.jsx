@@ -1,3 +1,5 @@
+import { NavLink } from "react-router-dom"
+
 /**
  * VideoCard — grid card with thumbnail, channel avatar, title, meta.
  * Used in: HomePage, LikedPage, SubscriptionPage
@@ -13,6 +15,7 @@
  *   onClick    fn
  */
 const VideoCard = ({
+  video_id = "id",
   title = "Video Title",
   channel = "Channel",
   views = "0 views",
@@ -21,12 +24,17 @@ const VideoCard = ({
   badge = null,
   avatarBg = "bg-[#e24b4a]",
   onClick,
+  thumbnail
 }) => {
   return (
-    <div className="flex flex-col gap-2 cursor-pointer group" onClick={onClick}>
+    <NavLink to={`/watch/${video_id}`} className="flex flex-col gap-2 cursor-pointer group" onClick={onClick}>
       {/* Thumbnail */}
       <div className="relative w-full aspect-video bg-[#272727] rounded-xl overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />
+        {thumbnail ? (
+          <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />
+        )}
         {badge && <div className="absolute top-2 left-2">{badge}</div>}
         <span className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
           {duration}
@@ -43,10 +51,10 @@ const VideoCard = ({
             {title}
           </p>
           <p className="text-[#aaa] text-xs">{channel}</p>
-          <p className="text-[#aaa] text-xs">{views}</p>
+          <p className="text-[#aaa] text-xs">{views} views</p>
         </div>
       </div>
-    </div>
+    </NavLink>
   )
 }
 
