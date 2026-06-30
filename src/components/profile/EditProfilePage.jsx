@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { updateAvatar, updateCoverImage, currentUser } from "../../services/user.api"
+import { updateAvatar, updateCoverImage, currentUser, updateAccountDetails, changePassword } from "../../services/user.api"
 import FormField from "../shared/FormField"
 
 const EditProfilePage = () => {
@@ -9,11 +9,18 @@ const EditProfilePage = () => {
   const [fullname, setFullname] = useState("")
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
-  const [bio, setBio] = useState("")
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [coverPreview, setCoverPreview] = useState(null)
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [coverLoading, setCoverLoading] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false)
+  const [newPassword, setNewPassword] = useState("")
+  const [oldPassword, setOldPassword] = useState("")
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState("")
+  const [passwordSuccess, setPasswordSuccess] = useState("")
+  const [error, setError] = useState("")
   const avatarInputRef = useRef(null)
   const coverInputRef = useRef(null)
 
@@ -23,7 +30,6 @@ const EditProfilePage = () => {
       setFullname(u.fullname || "")
       setUsername(u.username || "")
       setEmail(u.email || "")
-      setBio(u.bio || "")
       setAvatarPreview(u.avatar || null)
       setCoverPreview(u.coverImage || null)
     }).catch(console.error)
@@ -56,6 +62,43 @@ const EditProfilePage = () => {
       setCoverPreview(user?.coverImage || null)
     } finally {
       setCoverLoading(false)
+    }
+  }
+
+  const handlePasswordChange = async () => {
+    setPasswordError("")
+    setPasswordSuccess("")
+
+    // Validation
+    if (!oldPassword || !newPassword) {
+      setPasswordError("Both fields are required.")
+      return
+    }
+    if (newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters.")
+      return
+    }
+    if (oldPassword === newPassword) {
+      setPasswordError("New password must be different from the old password.")
+      return
+    }
+
+    setPasswordLoading(true)
+    try {
+      // Pass as object so user.api.js can destructure { oldPassword, newPassword }
+      await changePassword({ oldPassword, newPassword })
+      setPasswordSuccess("Password updated successfully!")
+      setOldPassword("")
+      setNewPassword("")
+      setTimeout(() => {
+        setShowPasswordForm(false)
+        setPasswordSuccess("")
+      }, 2000)
+    } catch (err) {
+      console.log(err.response.data.message)
+      setPasswordError(err?.response?.data?.message || "Failed to update password. Please try again.")
+    } finally {
+      setPasswordLoading(false)
     }
   }
 
@@ -116,18 +159,100 @@ const EditProfilePage = () => {
           <FormField label="Full name" value={fullname} onChange={(e) => setFullname(e.target.value)} />
           <FormField label="Username" value={username} onChange={(e) => setUsername(e.target.value)} prefix="@" />
           <FormField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <FormField label="Bio" type="textarea" rows={3} value={bio} onChange={(e) => setBio(e.target.value)} maxLength={150} charCount placeholder="Tell viewers about your channel..." />
 
+          {/* Password Section */}
           <div className="border-t border-[#222] pt-5">
             <p className="text-sm text-[#aaa] mb-2">Password</p>
-            <button className="w-full text-left bg-transparent border border-[#555] text-white text-sm px-4 py-2.5 rounded-lg cursor-pointer">
+            <button
+              onClick={() => {
+                setShowPasswordForm(!showPasswordForm)
+                setPasswordError("")
+                setPasswordSuccess("")
+                setOldPassword("")
+                setNewPassword("")
+              }}
+              className="w-full text-left bg-transparent border border-[#555] text-white text-sm px-4 py-2.5 rounded-lg cursor-pointer">
               🔒 Change password
             </button>
+
+            {showPasswordForm && (
+              <div className="mt-4 space-y-3">
+                <FormField
+                  label="Current Password"
+                  type="password"
+                  value={oldPassword}
+                  onChange={(e) => { setOldPassword(e.target.value); setPasswordError(""); setPasswordSuccess("") }}
+                />
+                <FormField
+                  label="New Password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => { setNewPassword(e.target.value); setPasswordError(""); setPasswordSuccess("") }}
+                />
+
+                {passwordError && (
+                  <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                    {passwordError}
+                  </div>
+                )}
+
+                {passwordSuccess && (
+                  <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-400">
+                    ✓ {passwordSuccess}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowPasswordForm(false)
+                      setPasswordError("")
+                      setPasswordSuccess("")
+                      setOldPassword("")
+                      setNewPassword("")
+                    }}
+                    className="flex-1 bg-transparent border border-[#555] text-white text-sm py-2 rounded-lg cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handlePasswordChange}
+                    disabled={passwordLoading}
+                    className="flex-1 bg-blue-600 text-white text-sm px-4 py-2 rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {passwordLoading ? "Updating..." : "Update Password"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+
+          {error !== "" && (
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {error}
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button onClick={() => navigate("/profile")} className="flex-1 bg-transparent border border-[#555] text-white text-sm py-2.5 rounded-lg cursor-pointer">Cancel</button>
-            <button className="flex-1 bg-[#e24b4a] border-none text-white text-sm py-2.5 rounded-lg cursor-pointer font-medium">Save changes</button>
+            <button
+              disabled={saveLoading}
+              onClick={async () => {
+                setSaveLoading(true)
+                setError("")
+                try {
+                  await updateAccountDetails({ fullname, username, email })
+                  navigate("/profile")
+                } catch (err) {
+                  setError(err?.response?.data?.message || "Failed to save changes")
+                } finally {
+                  setSaveLoading(false)
+                }
+              }}
+              className="flex-1 bg-[#e24b4a] border-none text-white text-sm py-2.5 rounded-lg cursor-pointer font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saveLoading ? "Saving..." : "Save changes"}
+            </button>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import FormField from "../shared/FormField"
+import { publishVideo } from "../../services/user.api"
 
 const VISIBILITY_OPTIONS = [
   { value: "public", label: "Public", desc: "Everyone can watch your video" },
@@ -13,10 +14,27 @@ const UploadVideoPage = () => {
   const videoInputRef = useRef(null)
   const thumbInputRef = useRef(null)
   const [videoFile, setVideoFile] = useState(null)
-  const [thumbPreview, setThumbPreview] = useState(null)
+  const [thumbFile, setThumbFile] = useState(null)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [visibility, setVisibility] = useState("public")
+  const [publish, setPublish] = useState(false)
+  const [progress, setProgress] = useState(0)
+  useEffect(() => {
+    async function uploadVideo(){
+      try {
+        if(!publish) return 
+
+        const response = await publishVideo({title, description, videoFile, thumbnail: thumbFile, onProgress: setProgress})
+        setPublish(false)
+        setProgress(0)
+        navigate("/")        
+      } catch (error) {
+        console.log(error)
+      }
+      }
+      uploadVideo()
+  },[publish]);
 
   return (
     <div className="bg-[#0f0f0f] min-h-screen text-white pb-12">
@@ -52,8 +70,9 @@ const UploadVideoPage = () => {
               <p className="text-white text-sm font-medium truncate">{videoFile.name}</p>
               <p className="text-[#aaa] text-xs mt-0.5">{(videoFile.size / (1024 * 1024)).toFixed(1)} MB</p>
               <div className="mt-2 h-1 bg-[#333] rounded-full overflow-hidden">
-                <div className="h-full w-3/4 bg-[#e24b4a] rounded-full" />
+                <div className="h-full bg-[#e24b4a] rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
               </div>
+              <p className="text-xs text-[#aaa] mt-1">{progress > 0 && progress < 100 ? `${progress}% uploading...` : progress === 100 ? "Processing..." : ""}</p>
             </div>
             <button onClick={() => setVideoFile(null)} className="text-[#aaa] hover:text-white bg-transparent border-none cursor-pointer text-lg">✕</button>
           </div>
@@ -71,8 +90,8 @@ const UploadVideoPage = () => {
                 onClick={() => thumbInputRef.current.click()}
                 className="relative w-48 aspect-video rounded-lg overflow-hidden bg-[#1a1a1a] border-2 border-dashed border-[#333] hover:border-[#e24b4a] cursor-pointer flex items-center justify-center transition-colors group"
               >
-                {thumbPreview
-                  ? <img src={thumbPreview} alt="thumbnail" className="w-full h-full object-cover" />
+                {thumbFile
+                  ? <img src={URL.createObjectURL(thumbFile)} alt="thumbnail" className="w-full h-full object-cover" />
                   : <div className="flex flex-col items-center gap-1 text-[#555] group-hover:text-[#aaa] transition-colors">
                       <span className="text-2xl">🖼️</span>
                       <span className="text-xs">Upload thumbnail</span>
@@ -84,7 +103,14 @@ const UploadVideoPage = () => {
                 <p>Recommended: 1280×720 (16:9)</p>
                 <p className="mt-1">Max size: 2MB · JPG, PNG, WebP</p>
               </div>
-              <input type="file" accept="image/*" ref={thumbInputRef} onChange={(e) => { const f = e.target.files[0]; if (f) setThumbPreview(URL.createObjectURL(f)) }} className="hidden" />
+              <input onChange={(e)=>{
+                  const f = e.target.files[0]
+                  if (f) {
+                      setThumbFile(f)
+                  }
+                }
+              } 
+              type="file" accept="image/*" ref={thumbInputRef} className="hidden" />
             </div>
           </div>
 
@@ -106,7 +132,7 @@ const UploadVideoPage = () => {
 
           <div className="flex gap-3 pt-2">
             <button onClick={() => navigate("/profile")} className="flex-1 bg-transparent border border-[#555] text-white text-sm py-2.5 rounded-lg cursor-pointer hover:border-[#aaa] transition-colors">Cancel</button>
-            <button disabled={!videoFile || !title.trim()} className="flex-1 bg-[#e24b4a] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm py-2.5 rounded-lg cursor-pointer font-medium hover:bg-[#c73c3b] transition-colors border-none">
+            <button onClick={()=>setPublish(true)} disabled={!videoFile || !title.trim() || !thumbFile} className="flex-1 bg-[#e24b4a] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm py-2.5 rounded-lg cursor-pointer font-medium hover:bg-[#c73c3b] transition-colors border-none">
               Publish
             </button>
           </div>

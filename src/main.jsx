@@ -32,7 +32,7 @@ const router = createBrowserRouter(
         <Route path="/profile">
           <Route index element={<ProfilePage />} />
           <Route path="upload" element={<UploadVideoPage />} />
-          <Route path="edit" element={<EditProfilePage />} />
+          <Route path="edit-profile" element={<EditProfilePage />} />
         </Route>
       </Route>
       <Route path="/signin" element={<LoginPage />} />

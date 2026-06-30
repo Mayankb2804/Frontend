@@ -28,6 +28,15 @@ export async function signUp({ email, password, username, fullname, avatar, cove
   return response.data.data.user
 }
 
+export async function deleteAccount(params) {
+    const response = api.delete("/users/delete-account")
+}
+
+export async function updateAccountDetails({ fullname, username, email }) {
+  const response = await api.patch("/users/update-account-details", { fullname, username, email })
+  return response.data.data
+} 
+
 export async function changePassword({ oldPassword, newPassword }) {
   await api.post("/users/change-password", { oldPassword, newPassword })
   return true
@@ -57,3 +66,38 @@ export async function getChannelStats() {
   return response.data.data;
 }
 
+
+
+//videos
+export async function publishVideo({title, description, videoFile, thumbnail, onProgress}){
+  const formdata = new FormData()
+  formdata.append("title", title)
+  formdata.append("description", description)
+  formdata.append("videoFile", videoFile)
+  formdata.append("thumbnail", thumbnail)
+  const response = await api.post("/videos", formdata, {
+    onUploadProgress: (progressEvent) => {
+      const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+      if (onProgress) onProgress(percent)
+    }
+  })
+  return response.data.data
+}
+
+export async function getAllVideos() {
+  const response = await api.get("/videos")
+  return response.data.data
+}
+
+export async function getLikedVideos() {
+  const response = await api.get("/likes/videos")
+  return response.data.data
+}
+
+//playlists
+
+export async function getUserPlaylists() {
+  const user = await currentUser();
+  const response = await api.get(`/playlist/user/${user._id}`)
+  return response.data.data
+}

@@ -1,11 +1,13 @@
+import { useNavigate } from "react-router-dom"
+import { deleteAccount } from "../services/user.api"
 import PageWrapper from "../components/shared/PageWrapper"
 
 const SECTIONS = [
   {
     title: "Account",
     items: [
-      { icon: "👤", label: "Personal info", desc: "Name, email, profile photo" },
-      { icon: "🔒", label: "Privacy & security", desc: "Password, two-factor auth" },
+      { icon: "👤", label: "Personal info", desc: "Name, email, profile photo", action: "personal-info" },
+      { icon: "🔒", label: "Privacy & security", desc: "Password, two-factor auth", action: "privacy" },
       { icon: "🔔", label: "Notifications", desc: "Push, email, and SMS preferences" },
     ],
   },
@@ -28,12 +30,25 @@ const SECTIONS = [
     title: "Data & privacy",
     items: [
       { icon: "📊", label: "Your data in YouTube", desc: "Manage your activity" },
-      { icon: "🗑️", label: "Delete account", desc: "Permanently remove your account", danger: true },
+      { icon: "🗑️", label: "Delete account", desc: "Permanently remove your account", danger: true, action: "delete" },
     ],
   },
 ]
 
 const SettingsPage = () => {
+  const navigate = useNavigate()
+
+  const handleClick = async (action) => {
+    if (action === "personal-info") navigate("/profile/edit-profile")
+    if (action === "privacy") navigate("/profile/edit-profile", { state: { openPassword: true } })
+    if (action === "delete") {
+      if (confirm("Are you sure? This cannot be undone.")) {
+        await deleteAccount()
+        navigate("/login")
+      }
+    }
+  }
+
   return (
     <PageWrapper>
       <div className="max-w-2xl mx-auto px-6 py-8">
@@ -47,6 +62,7 @@ const SettingsPage = () => {
                 {section.items.map((item, i) => (
                   <div
                     key={item.label}
+                    onClick={() => item.action && handleClick(item.action)}
                     className={`flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-[#222] transition-colors ${
                       i !== section.items.length - 1 ? "border-b border-[#2a2a2a]" : ""
                     }`}
