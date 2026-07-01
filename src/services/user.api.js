@@ -28,8 +28,9 @@ export async function signUp({ email, password, username, fullname, avatar, cove
   return response.data.data.user
 }
 
-export async function deleteAccount(params) {
-    const response = api.delete("/users/delete-account")
+export async function deleteAccount() {
+  const response = await api.delete("/users/delete-account")
+  return response.data
 }
 
 export async function updateAccountDetails({ fullname, username, email }) {
@@ -84,8 +85,13 @@ export async function publishVideo({title, description, videoFile, thumbnail, on
   return response.data.data
 }
 
+export async function getChannelVideos() {
+  const response = await api.get("/dashboard/videos")
+  return response.data.data
+}
+
 export async function getAllVideos() {
-  const response = await api.get("/videos")
+  const response = await api.get("/videos/")
   return response.data.data
 }
 
@@ -93,10 +99,27 @@ export async function getVideoById(videoId) {
   const response = await api.get(`/videos/${videoId}`)
   return response.data.data
 }
+ 
+export async function deleteVideo({videoId}) {
+  const response = await api.delete(`/videos/${videoId}`)
+  return response.data.data
+}
 
+export async function togglePublishBtn({videoId}) {
+  const response = await api.patch(`/videos/toggle/publish/${videoId}`)
+  return response.data.data
+}
+
+export async function updateVideo({videoId, title, description, thumbnail}) {
+  const formData = new FormData();
+  if (title) formData.append("title", title)
+  if (description) formData.append("description", description)
+  if (thumbnail) formData.append("thumbnail", thumbnail)
+  const response = await api.patch(`/videos/${videoId}`, formData)
+  return response.data.data
+}
 
 //playlists
-
 export async function getUserPlaylists() {
   const user = await currentUser();
   const response = await api.get(`/playlist/user/${user._id}`)
@@ -114,12 +137,28 @@ export async function getPlaylistById(playlistId) {
 }
 
 export async function addVideoToPlaylist({videoId, playlistId}){
-  const response = await api.post(`/playlists/add/${videoId}/${playlistId}`)
+  const response = await api.patch(`/playlist/add/${videoId}/${playlistId}`)
   return response.data.data
 }
 
-//comments
+export async function removeVideoFromPlaylist({videoId, playlistId}){
+  const response = await api.patch(`/playlist/remove/${videoId}/${playlistId}`)
+  return response.data.data
+}
 
+export async function updatePlaylist({name, description, playlistId}) {
+  const response = await api.patch(`/playlist/${playlistId}`, { name, description })
+  return response.data.data
+}
+
+export async function deletePlaylist({playlistId}) {
+  const response = await api.delete(`/playlist/${playlistId}`)
+  return response.data.data
+}
+
+
+
+//comments
 export async function getCommentsByVideoId({videoId}) {
     const response = await api.get(`/comments/${videoId}`)
     return response.data.data
@@ -134,8 +173,10 @@ export async function toggleCommentLike(commentId) {
   const response = await api.post(`/likes/toggle/c/${commentId}`)
   return response.data.data
 }
-//subs
 
+
+
+//subs
 export async function getUserChannelSubscribers({channelId}) {
   const response = await api.get(`/subscriptions/c/${channelId}`)
   return response.data.data
@@ -146,8 +187,15 @@ export async function toggleSubscribe({channelId}) {
   return response.data.data
 }
 
-//likes
+export async function getUserSubscribedChannels() {
+  const user = await currentUser()
+  const response = await api.get(`/subscriptions/u/${user._id}`)
+  return response.data.data
+}
 
+
+
+//likes
 export async function getAllLikedVideosCount({videoId}) {
   const response = await api.get(`/likes/v/${videoId}`)
   return response.data.data

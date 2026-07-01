@@ -12,6 +12,7 @@ const LikedPage = () => {
       try {
         const data = await getLikedVideos()
         setVideos(data)
+        console.log(videos[0])
       } catch (err) {
         console.error("Failed to fetch liked videos:", err)
       }
@@ -28,7 +29,7 @@ const LikedPage = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
             {videos.map((v) => (
-              <VideoCard key={v._id} video_id={v._id} {...v} />
+              <VideoCard key={v._id} video_id={v.videoId} {...v} />
             ))}
           </div>
         )}

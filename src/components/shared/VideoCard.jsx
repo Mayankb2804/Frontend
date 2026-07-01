@@ -27,12 +27,12 @@ const VideoCard = ({
   thumbnail
 }) => {
   return (
-    <NavLink to={`/watch/${video_id}`} className="flex flex-col gap-2 cursor-pointer group" onClick={onClick}>
+    <NavLink to={`/watch/${video_id}`} className="flex flex-col gap-2 cursor-pointer group hover:bg-[#272727] hover:border-2 border-[#272727] rounded-2xl " onClick={onClick}>
       {/* Thumbnail */}
       <div className="relative w-full aspect-video bg-[#272727] rounded-xl overflow-hidden">
         {thumbnail ? (
           <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
-        ) : (
+        ) : ( 
           <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />
         )}
         {badge && <div className="absolute top-2 left-2">{badge}</div>}

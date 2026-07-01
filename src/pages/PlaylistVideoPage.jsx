@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import PageWrapper from "../components/shared/PageWrapper"
-import { getPlaylistById } from "../services/user.api"
+import { getPlaylistById, removeVideoFromPlaylist } from "../services/user.api"
 
 const PlaylistVideoPage = () => {
   const { playlistId } = useParams()
   const navigate = useNavigate()
   const [playlist, setPlaylist] = useState(null)
+  const [videos, setVideos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [openMenuId, setOpenMenuId] = useState(null)
 
   useEffect(() => {
     const fetchPlaylist = async () => {
@@ -17,6 +19,7 @@ const PlaylistVideoPage = () => {
       try {
         const data = await getPlaylistById(playlistId)
         setPlaylist(data)
+        setVideos(data?.videos || [])
       } catch (err) {
         setError(err?.response?.data?.message || "Failed to load playlist")
       } finally {
@@ -25,6 +28,21 @@ const PlaylistVideoPage = () => {
     }
     fetchPlaylist()
   }, [playlistId])
+
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null)
+    if (openMenuId) document.addEventListener("click", handleClickOutside)
+    return () => document.removeEventListener("click", handleClickOutside)
+  }, [openMenuId])
+
+  const handleRemoveVideo = async (videoId) => {
+    try {
+      await removeVideoFromPlaylist({ videoId, playlistId })
+      setVideos((prev) => prev.filter((v) => v._id !== videoId))
+    } catch (err) {
+      console.error("Failed to remove video:", err)
+    }
+  }
 
   if (loading) {
     return (
@@ -54,8 +72,6 @@ const PlaylistVideoPage = () => {
     )
   }
 
-  const videos = playlist.videos || []
-
   return (
     <PageWrapper>
       <div className="max-w-6xl mx-auto px-6 py-8">
@@ -68,7 +84,6 @@ const PlaylistVideoPage = () => {
 
         {/* Playlist header */}
         <div className="flex flex-col sm:flex-row gap-6 mb-10">
-          {/* Cover tile */}
           <div className="relative w-full sm:w-64 aspect-video shrink-0 rounded-xl overflow-hidden bg-[#272727]">
             <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />
             <div className="absolute inset-0 flex items-center justify-center">
@@ -80,7 +95,6 @@ const PlaylistVideoPage = () => {
             </div>
           </div>
 
-          {/* Info */}
           <div className="flex flex-col justify-center gap-2 min-w-0">
             <h1 className="text-2xl font-semibold text-white truncate">{playlist.name}</h1>
             {playlist.description && (
@@ -108,12 +122,15 @@ const PlaylistVideoPage = () => {
             {videos.map((v, i) => (
               <div
                 key={v._id}
-                onClick={() => navigate(`/watch/${v._id}`)}
-                className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-[#1a1a1a] transition-colors group"
+                className="flex items-center gap-4 p-2 rounded-lg hover:bg-[#1a1a1a] transition-colors group"
               >
                 <span className="text-[#666] text-sm w-5 text-center shrink-0">{i + 1}</span>
 
-                <div className="relative w-40 aspect-video shrink-0 rounded-lg overflow-hidden bg-[#272727]">
+                {/* Thumbnail — clickable */}
+                <div
+                  onClick={() => navigate(`/watch/${v._id}`)}
+                  className="relative w-40 aspect-video shrink-0 rounded-lg overflow-hidden bg-[#272727] cursor-pointer"
+                >
                   {v.thumbnail
                     ? <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
                     : <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />}
@@ -124,11 +141,49 @@ const PlaylistVideoPage = () => {
                   )}
                 </div>
 
-                <div className="flex flex-col gap-1 min-w-0">
+                {/* Info — clickable */}
+                <div
+                  onClick={() => navigate(`/watch/${v._id}`)}
+                  className="flex flex-col gap-1 min-w-0 flex-1 cursor-pointer"
+                >
                   <p className="text-white text-sm font-medium leading-snug line-clamp-2 group-hover:text-[#ccc] transition-colors">
                     {v.title}
                   </p>
                   <p className="text-[#aaa] text-xs">{v.views ?? 0} views</p>
+                </div>
+
+                {/* Three dot menu */}
+                <div className="relative shrink-0">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpenMenuId(openMenuId === v._id ? null : v._id)
+                    }}
+                    className="text-[#aaa] hover:text-white hover:bg-[#3f3f3f] w-8 h-8 flex items-center justify-center rounded-full text-sm bg-transparent border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    ⋮
+                  </button>
+
+                  {openMenuId === v._id && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-0 top-9 z-50 w-48 bg-[#212121] border border-[#3f3f3f] rounded-xl shadow-xl py-2"
+                    >
+                      <button
+                        onClick={() => { setOpenMenuId(null); navigate(`/watch/${v._id}`) }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-white hover:bg-[#3f3f3f] bg-transparent border-none cursor-pointer text-left"
+                      >
+                        ▶ Play video
+                      </button>
+                      <div className="my-1 border-t border-[#3f3f3f]" />
+                      <button
+                        onClick={() => { setOpenMenuId(null); handleRemoveVideo(v._id) }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-[#3f3f3f] bg-transparent border-none cursor-pointer text-left"
+                      >
+                        🗑️ Remove from playlist
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

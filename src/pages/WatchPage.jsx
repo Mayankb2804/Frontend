@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import PageWrapper from "../components/shared/PageWrapper"
 import VideoRow from "../components/shared/VideoRow"
-import { getCommentsByVideoId, getVideoById, getUserProfile, getAllLikedVideosCount, toggleVideoLike, addComment, currentUser, toggleCommentLike, toggleSubscribe } from "../services/user.api"
+import { getCommentsByVideoId, getVideoById, getUserProfile, getAllLikedVideosCount, toggleVideoLike, addComment, currentUser, toggleCommentLike, toggleSubscribe, addVideoToPlaylist, getUserPlaylists, removeVideoFromPlaylist } from "../services/user.api"
 import { Component } from "lucide-react"
 
 const RECOMMENDED = Array.from({ length: 10 }, (_, i) => ({
@@ -15,6 +15,7 @@ const RECOMMENDED = Array.from({ length: 10 }, (_, i) => ({
 
 const WatchPage = () => {
   const { videoId } = useParams()
+  const navigate = useNavigate()
   const [video, setVideo] = useState(null)
   const [channel, setChannel] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -25,6 +26,11 @@ const WatchPage = () => {
   const[isLiked, setIsLiked] = useState(false)
   const[loggedInUser, setLoggedInUser] = useState(null)
   const[subscribed, setSubscribed] = useState(false)
+  const[showSavePanel, setShowSavePanel] = useState(false)
+  const[playlists, setPlaylists] = useState([])
+  const[playlistsLoading, setPlaylistsLoading] = useState(false)
+  const[savedToPlaylists, setSavedToPlaylists] = useState({})
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
 
   useEffect(() => {
     currentUser().then(setLoggedInUser).catch(() => {})
@@ -98,6 +104,49 @@ const WatchPage = () => {
     }
   }
   
+  const openSavePanel = async () => {
+    setShowSavePanel(true)
+    setPlaylistsLoading(true)
+    try {
+      const data = await getUserPlaylists()
+      setPlaylists(data || [])
+      // pre-check playlists that already contain this video
+      const preChecked = {}
+      ;(data || []).forEach((pl) => {
+        if (pl.videos?.includes(videoId)) preChecked[pl._id] = true
+      })
+      setSavedToPlaylists(preChecked)
+    } catch (err) {
+      console.error("Failed to fetch playlists:", err)
+    } finally {
+      setPlaylistsLoading(false)
+    }
+  }
+
+  const handleAddToPlaylist = async (playlistId) => {
+    if (!videoId || !playlistId) return
+    const alreadySaved = !!savedToPlaylists[playlistId]
+    try {
+      if (alreadySaved) {
+        // optimistic remove
+        setSavedToPlaylists((prev) => ({ ...prev, [playlistId]: false }))
+        await removeVideoFromPlaylist({ videoId, playlistId })
+      } else {
+        setSavedToPlaylists((prev) => ({ ...prev, [playlistId]: true }))
+        await addVideoToPlaylist({ videoId, playlistId })
+      }
+    } catch (err) {
+      // revert checkbox on failure
+      setSavedToPlaylists((prev) => ({ ...prev, [playlistId]: alreadySaved }))
+      console.error("Failed to update playlist:", err)
+    }
+  }
+
+  const goToCreatePlaylist = () => {
+    setShowSavePanel(false)
+    navigate("/playlists")
+  }
+
   const addNewComment = async (e) => {
     try {
       if(e.key === 'Enter'){
@@ -209,22 +258,129 @@ const WatchPage = () => {
               {video ? `${video.views ?? 0} views` : "1.2M views · 3 months ago"}
             </p>
             <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={handleLikeToggle}
-                className={`flex items-center gap-1.5 text-sm px-4 py-2 rounded-full transition-colors border-none cursor-pointer ${
-                  isLiked ? "bg-white text-black" : "bg-[#272727] hover:bg-[#3f3f3f] text-white"
-                }`}
-              >
-                <span>{isLiked ? "👍" : "👍🏻"}</span>
-                <span>{likeCount}</span>
-              </button>
-              {[["👎", ""], ["↗", "Share"], ["+", "Save"], ["⋯", ""]].map(([icon, label], i) => (
-                <button key={i} className="flex items-center gap-1.5 bg-[#272727] hover:bg-[#3f3f3f] text-white text-sm px-4 py-2 rounded-full transition-colors border-none cursor-pointer">
-                  {icon}{label && <span>{label}</span>}
+              {/* Like / Dislike — connected pill */}
+              <div className="flex items-center bg-[#272727] rounded-full overflow-hidden">
+                <button
+                  onClick={handleLikeToggle}
+                  className={`flex items-center gap-1.5 text-sm px-4 py-2 border-none cursor-pointer transition-colors ${
+                    isLiked ? "bg-white text-black" : "hover:bg-[#3f3f3f] text-white"
+                  }`}
+                >
+                  <span>{isLiked ? "👍" : "👍🏻"}</span>
+                  <span>{likeCount}</span>
                 </button>
-              ))}
-            </div>
+                <div className="w-px h-5 bg-[#3f3f3f]" />
+                <button className="flex items-center px-4 py-2 bg-transparent hover:bg-[#3f3f3f] text-white border-none cursor-pointer transition-colors">
+                  👎
+                </button>
+              </div>
+
+              {/* Share */}
+              <button className="flex items-center gap-1.5 bg-[#272727] hover:bg-[#3f3f3f] text-white text-sm px-4 py-2 rounded-full border-none cursor-pointer transition-colors">
+                <span>↗</span>
+                <span>Share</span>
+              </button>
+
+              {/* Save */}
+              <button onClick={openSavePanel} className="flex items-center gap-1.5 bg-[#272727] hover:bg-[#3f3f3f] text-white text-sm px-4 py-2 rounded-full border-none cursor-pointer transition-colors">
+                <span>+</span>
+                <span>Save</span>
+              </button>
+
+              {/* More */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowMoreMenu((prev) => !prev)}
+                  className="flex items-center justify-center w-9 h-9 bg-[#272727] hover:bg-[#3f3f3f] text-white rounded-full border-none cursor-pointer transition-colors"
+                >
+                  ⋯
+                </button>
+
+                {showMoreMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)} />
+                    <div className="absolute right-0 top-11 z-50 w-48 bg-[#212121] border border-[#3f3f3f] rounded-xl shadow-xl py-2">
+                      <button
+                        onClick={() => setShowMoreMenu(false)}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-white hover:bg-[#3f3f3f] bg-transparent border-none cursor-pointer text-left"
+                      >
+                        🔗 Copy link
+                      </button>
+                      <button
+                        onClick={() => setShowMoreMenu(false)}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-white hover:bg-[#3f3f3f] bg-transparent border-none cursor-pointer text-left"
+                      >
+                        📝 Report
+                      </button>
+                      <div className="my-1 border-t border-[#3f3f3f]" />
+                      <button
+                        onClick={() => setShowMoreMenu(false)}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-[#3f3f3f] bg-transparent border-none cursor-pointer text-left"
+                      >
+                        🚫 Not interested
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div> 
           </div>
+
+          {/* Save to playlist panel */}
+          {showSavePanel && (
+            <div
+              className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+              onClick={() => setShowSavePanel(false)}
+            >
+              <div
+                className="bg-[#212121] rounded-xl w-80 max-h-[28rem] flex flex-col overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="px-4 py-3 border-b border-[#333]">
+                  <p className="text-white text-sm font-medium">Save video to...</p>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-2 py-2">
+                  {playlistsLoading ? (
+                    <p className="text-[#aaa] text-sm px-3 py-2">Loading playlists...</p>
+                  ) : playlists.length === 0 ? (
+                    <p className="text-[#aaa] text-sm px-3 py-2">No playlists yet. Create one below.</p>
+                  ) : (
+                    playlists.map((pl) => (
+                      <label
+                        key={pl._id}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#2a2a2a] cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={!!savedToPlaylists[pl._id]}
+                          onChange={() => handleAddToPlaylist(pl._id)}
+                          className="w-4 h-4 accent-[#3ea6ff] cursor-pointer"
+                        />
+                        <span className="text-white text-sm truncate">{pl.name}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+
+                <div className="border-t border-[#333] px-3 py-3 flex flex-col gap-2">
+                  <button
+                    onClick={goToCreatePlaylist}
+                    className="flex items-center gap-2 text-white text-sm font-medium py-2.5 px-1 bg-transparent border-none cursor-pointer hover:text-[#3ea6ff] transition-colors"
+                  >
+                    <span className="text-lg leading-none">+</span>
+                    <span>Create new playlist</span>
+                  </button>
+                  <button
+                    onClick={() => setShowSavePanel(false)}
+                    className="text-white text-sm font-medium py-2 rounded-lg bg-[#272727] hover:bg-[#3f3f3f] border-none cursor-pointer transition-colors"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Channel */}
           <div className="flex items-center justify-between bg-[#1a1a1a] rounded-xl p-4 mb-4">
